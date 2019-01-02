@@ -20,7 +20,8 @@ function initMap() {
     directionsService = new google.maps.DirectionsService;
 
     addAutocompleteToInputs()
-    setUserCurrentLocation();
+    setUserCurrentLocation()
+    tieInputEvents()
 }
 
 
@@ -87,16 +88,15 @@ function getDirections(){
 
 
 function setUserCurrentLocation(){
-    var userLocationIcons = jQuery('.location-icon')
+    var userLocationIcons = Array.from( document.querySelectorAll('.location-icon') )
 
     if( !navigator.geolocation ){    
-        userLocationIcons.remove()
+        userLocationIcons.map( function(element){ element.style.display = 'none' })
         return false;
     }
 
-    
-    userLocationIcons.on('click',function(){
-        var place = $(this).attr('data-location')
+    var handleClick = function(event){
+        var place = event.currentTarget.getAttribute('data-location')
 
         navigator.geolocation.getCurrentPosition(function(position) {
             var pos = {
@@ -108,8 +108,13 @@ function setUserCurrentLocation(){
             reverseGeocode( position.coords.latitude, position.coords.longitude, place )
 
         }, function() {
-            userLocationIcons.off('click').remove();
+            google.maps.event.clearListeners( event.currentTarget, 'click', handleClick)
+            event.target.style.display = 'none'
         });
+    }
+    
+    userLocationIcons.map( function( element ){
+        google.maps.event.addDomListener( element, 'click', handleClick )
     })
 }
 
@@ -128,7 +133,7 @@ function reverseGeocode( lat, lng, place ){
         if( results[0] ){
             places[place].placeId = results[0].place_id
             places[place].element.value = results[0].formatted_address
-            addClass( places[place].element.value, 'brk-form-wrap-active' )
+            addClass( places[place].element.parentElement, 'brk-form-wrap-active' )
         }
 
         // Get directions if other marker is already set
@@ -139,14 +144,42 @@ function reverseGeocode( lat, lng, place ){
 }
 
 
-jQuery(function($){
-    $('#pick_up,#drop_off').on('focus',function(){
-        $(this).parent().addClass('brk-form-wrap-active')
-    }).on('blur',function(){
-        if( !$(this).val() ){
-            $(this).parent().removeClass('brk-form-wrap-active')
+function tieInputEvents(){
+    var onFocus = function(event){
+        addClass( event.currentTarget.parentElement, 'brk-form-wrap-active' )
+    }
+    var onBlur = function(event){
+        if( !event.target.value ){
+            removeClass( event.currentTarget.parentElement, 'brk-form-wrap-active' );
         }
-    })
-})
+    }
+    google.maps.event.addDomListener( places.pickUp.element, 'focus', onFocus )
+    google.maps.event.addDomListener( places.pickUp.element, 'blur', onBlur )
+    google.maps.event.addDomListener( places.dropOff.element, 'focus', onFocus )
+    google.maps.event.addDomListener( places.dropOff.element, 'blur', onBlur )
+}
 
+function addClass( el, className ){
+    if( !el || !className ){
+        return false;
+    }
 
+    if ( el.classList && el.classList.add ){
+        el.classList.add(className);
+    }
+    else if( el.className ){
+        el.className += ' ' + className;
+    }
+};
+
+function removeClass( el, className){
+    if( !el || !className ){
+        return false;
+    }
+
+    if ( el.classList && el.classList.remove ){
+        el.classList.remove(className);
+    }else if( el.className && className.split ){
+        el.className = el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+    }
+};
