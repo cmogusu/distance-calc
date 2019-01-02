@@ -1,46 +1,25 @@
-var markers = []
-var map
-var locations = []
-var icons_array = []
-var markersOnMap = {}
-
-var map, directionsService, directionsRenderer, geocoder
+var directionsService, geocoder
 var places = {
     pickUp : {
         placeId : '',
-        marker : false,
         element : '',
     },
     dropOff : {
         placeId : '',
-        marker : false,
         element : '',
     }
 }
 var totalDistance = 0
-var removeMapListener = false
 
 
 function initMap() {
     places.pickUp.element = document.getElementById('pick_up')
     places.dropOff.element = document.getElementById('drop_off')
 
-    map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 12,
-        center: new google.maps.LatLng(40.701896845000306, -73.90824226899952),
-        //center: new google.maps.LatLng(20.9176265, -100.7446703),
-        mapTypeId: 'terrain'
-    });
-    
     geocoder = new google.maps.Geocoder
     directionsService = new google.maps.DirectionsService;
-    directionsRenderer = new google.maps.DirectionsRenderer({
-        draggable: true,
-        map:map,
-    })
 
     addAutocompleteToInputs()
-    addMapClickListener()
     setUserCurrentLocation();
 }
 
@@ -54,7 +33,6 @@ function addAutocompleteToInputs(){
 
     
     autocompletes.map(function(autocomplete, index){
-        // Set fields that we would like to retrieve
         autocomplete.setFields(['place_id','geometry'])
 
         // Attach listeners when a location is selected
@@ -70,26 +48,9 @@ function addAutocompleteToInputs(){
             var otherPlace = places[index!=0 ? 'pickUp' : 'dropOff']
             currentPlace.placeId = autocompletedPlace.place_id
 
-            // Add marker if it was not set before, and then reposition it
-            if( !currentPlace.marker ){
-                currentPlace.marker = new google.maps.Marker({
-                    draggable:true,
-                    label : {
-                        color : '#fff',
-                        text : index==0 ? 'A' : 'B',
-                    }
-                });
-                currentPlace.marker.setMap(map)
-            }
-
-            currentPlace.marker.setPosition(autocompletedPlace.geometry.location)
-
             // Reposition map and send request on directions
-            if( otherPlace.marker ){
-                removeMapListener.remove()
+            if( otherPlace.placeId ){
                 getDirections()
-            }else{
-                map.panTo( autocompletedPlace.geometry.location )
             }
         })
     })
@@ -98,21 +59,16 @@ function addAutocompleteToInputs(){
 
 function getDirections(){
     directionsService.route({
-        origin : places.pickUp.marker.getPosition(),
-        destination : places.dropOff.marker.getPosition(),
+        origin : { placeId : places.pickUp.placeId },
+        destination : { placeId : places.dropOff.placeId },
         travelMode : google.maps.TravelMode.DRIVING,
     },( results, status )=>{
         if( status!==google.maps.DirectionsStatus.OK ){
             return false;
         }
 
-        // Remove original markers
-        places.pickUp.marker.setMap(null)
-        places.dropOff.marker.setMap(null)
 
         // display directions
-        directionsRenderer.setDirections(results);
-
         totalDistance = results.routes.reduce( function(distance, route){
             return distance + route.legs.reduce(function( innerDistance, leg){
                 return innerDistance + leg.distance.value;
@@ -135,12 +91,12 @@ function setUserCurrentLocation(){
 
     if( !navigator.geolocation ){    
         userLocationIcons.remove()
+        return false;
     }
 
     
     userLocationIcons.on('click',function(){
         var place = $(this).attr('data-location')
-        var otherPlace = place=='pickUp' ? 'dropOff' : 'pickUp';
 
         navigator.geolocation.getCurrentPosition(function(position) {
             var pos = {
@@ -148,30 +104,8 @@ function setUserCurrentLocation(){
                 lng: position.coords.longitude
             }
 
-            if( !places[place].marker ){
-                places[place].marker = new google.maps.Marker({
-                    draggable:true,
-                    label : {
-                        color : '#fff',
-                        text : place=='pickUp' ? 'A' : 'B',
-                    }
-                });
-
-                places[place].marker.setMap( map )
-            }
-
-            
-            places[place].marker.setPosition( pos )
-
             // Get address of user location
             reverseGeocode( position.coords.latitude, position.coords.longitude, place )
-
-            // Get directions if other marker is already set
-            if( places[otherPlace].marker ){
-                getDirections()
-            }else{
-                map.panTo(pos)
-            }
 
         }, function() {
             userLocationIcons.off('click').remove();
@@ -180,45 +114,9 @@ function setUserCurrentLocation(){
 }
 
 
-function addMapClickListener(){
-    removeMapListener = map.addListener('click',function(event){
-        var place
-        var otherPlace
-
-        if( !places.pickUp.marker ){
-            place = 'pickUp'
-            otherPlace = 'dropOff'
-        }else if( !places.dropOff.marker ){
-            place = 'dropOff'
-            otherPlace = 'pickUp'
-        }else{
-            removeMapListener && removeMapListener.remove()
-            return false;
-        }
-
-        // get address from marked location 
-        reverseGeocode( event.latLng.lat(), event.latLng.lng(), place )
-
-        // add markers to map
-        places[place].marker = new google.maps.Marker({
-            draggable:true,
-            label : {
-                color : '#fff',
-                text : place=='pickUp' ? 'A' : 'B',
-            }
-        });
-
-        places[place].marker.setMap( map )
-        places[place].marker.setPosition( event.latLng )
-
-        if( places[otherPlace].marker ){
-            getDirections()
-        }
-    })
-}
-
-
 function reverseGeocode( lat, lng, place ){
+    var otherPlace = place=='pickUp' ? 'dropOff' : 'pickUp';
+
     geocoder.geocode({
         location : { lat, lng },
     }, function(results, status){
@@ -228,32 +126,16 @@ function reverseGeocode( lat, lng, place ){
         }
 
         if( results[0] ){
-            jQuery( places[place].element ).val( results[0].formatted_address ).parent().addClass('brk-form-wrap-active');
-            
+            places[place].placeId = results[0].place_id
+            places[place].element.value = results[0].formatted_address
+            addClass( places[place].element.value, 'brk-form-wrap-active' )
+        }
+
+        // Get directions if other marker is already set
+        if( places[otherPlace].placeId ){
+            getDirections()
         }
     })
-}
-
-        
-function calculateAndDisplayRoute(directionsService, directionsDisplay,location_car) {
-    /*var origin = "San Fernando de Apure, Apure, Venezuela"
-    var destination = 'San Juan de Payara, Apure, Venezuela'*/
-
-    destination = document.getElementById('pick_up').value
-    if(destination!=''){
-        directionsService.route({
-            origin: location_car,//document.getElementById('start').value,
-            destination: destination,// document.getElementById('end').value,
-            travelMode: 'DRIVING'
-        }, function(response, status) {
-            console.log(response)
-            if (status === 'OK') {
-                directionsDisplay.setDirections(response);
-            } else {
-                window.alert('Directions request failed due to ' + status);
-            }
-        });
-    }
 }
 
 
@@ -266,3 +148,5 @@ jQuery(function($){
         }
     })
 })
+
+
