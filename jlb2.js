@@ -1,23 +1,30 @@
-var directionsService, geocoder
+var directionsService, geocoder, distanceMatrixService
 var places = {
     pickUp : {
         placeId : '',
+        latLng : false,
         element : '',
     },
     dropOff : {
         placeId : '',
+        latLng:false,
         element : '',
     }
 }
-var totalDistance = 0
+
+var distanceInputElement = ''
+var costInputElement = ''
 
 
 function initMap() {
     places.pickUp.element = document.getElementById('pick_up')
     places.dropOff.element = document.getElementById('drop_off')
+    distanceInputElement = document.getElementById('distance-input')
+    costInputElement = document.getElementById('cost-input')
 
     geocoder = new google.maps.Geocoder
     directionsService = new google.maps.DirectionsService;
+    distanceMatrixService = new google.maps.DistanceMatrixService();
 
     addAutocompleteToInputs()
     setUserCurrentLocation()
@@ -47,30 +54,55 @@ function addAutocompleteToInputs(){
 
             var currentPlace = places[ index==0 ? 'pickUp' : 'dropOff' ]
             var otherPlace = places[index!=0 ? 'pickUp' : 'dropOff']
-            currentPlace.placeId = autocompletedPlace.place_id
+            currentPlace.latLng = autocompletedPlace.geometry.location
 
             // Reposition map and send request on directions
-            if( otherPlace.placeId ){
-                getDirections()
+            if( otherPlace.latLng ){
+                //getDirections()
+                getDistance();
             }
         })
     })
 }
 
 
+function getDistance(){
+    distanceMatrixService.getDistanceMatrix({
+        origins : [places.pickUp.latLng],
+        destinations : [places.dropOff.latLng,],
+        travelMode : google.maps.TravelMode.DRIVING,
+        unitSystem : google.maps.UnitSystem.IMPERIAL,
+    }, function( response, status ){
+        if( status!==google.maps.DirectionsStatus.OK ){
+            return false;
+        }
+
+        var totalDistance = response.rows[0].elements[0].distance.value
+
+        var cost = Math.round( totalDistance/16.09344*costPerMile )/100;
+        var miles = Math.round( totalDistance/160.9344 )/10
+
+        distanceInputElement.value = miles + ' miles'
+        addClass( distanceInputElement.parentElement, 'brk-form-wrap-active')
+
+        costInputElement.value = '$' + cost
+        addClass( costInputElement.parentElement, 'brk-form-wrap-active' )
+    })
+}
+
+
 function getDirections(){
     directionsService.route({
-        origin : { placeId : places.pickUp.placeId },
-        destination : { placeId : places.dropOff.placeId },
+        origin : places.pickUp.latLng,
+        destination : places.dropOff.latLng,
         travelMode : google.maps.TravelMode.DRIVING,
     },( results, status )=>{
         if( status!==google.maps.DirectionsStatus.OK ){
             return false;
         }
 
-
         // display directions
-        totalDistance = results.routes.reduce( function(distance, route){
+        var totalDistance = results.routes.reduce( function(distance, route){
             return distance + route.legs.reduce(function( innerDistance, leg){
                 return innerDistance + leg.distance.value;
             },0)
@@ -80,9 +112,11 @@ function getDirections(){
         var cost = Math.round( totalDistance/16.09344*costPerMile )/100;
         var miles = Math.round( totalDistance/160.9344 )/10
 
-        jQuery('.total-distance').val( miles + ' miles' ).parent().addClass('brk-form-wrap-active')
-        jQuery('.total-cost').val( '$' + cost ).parent().addClass('brk-form-wrap-active')
+        distanceInputElement.value = miles + ' miles'
+        addClass( distanceInputElement.parentElement, 'brk-form-wrap-active')
 
+        costInputElement.value = '$' + cost
+        addClass( costInputElement.parentElement, 'brk-form-wrap-active' )
     })
 }
 
@@ -97,15 +131,22 @@ function setUserCurrentLocation(){
 
     var handleClick = function(event){
         var place = event.currentTarget.getAttribute('data-location')
+        var otherPlace = place=='pickUp' ? 'dropOff' : 'pickUp';
 
         navigator.geolocation.getCurrentPosition(function(position) {
-            var pos = {
+            places[place].latLng = new google.maps.LatLng({
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
-            }
+            })
 
             // Get address of user location
             reverseGeocode( position.coords.latitude, position.coords.longitude, place )
+
+            // Get directions if other marker is already set
+            if( places[otherPlace].latLng ){
+                //getDirections()
+                getDistance()
+            }
 
         }, function() {
             google.maps.event.clearListeners( event.currentTarget, 'click', handleClick)
@@ -120,8 +161,6 @@ function setUserCurrentLocation(){
 
 
 function reverseGeocode( lat, lng, place ){
-    var otherPlace = place=='pickUp' ? 'dropOff' : 'pickUp';
-
     geocoder.geocode({
         location : { lat, lng },
     }, function(results, status){
@@ -131,14 +170,8 @@ function reverseGeocode( lat, lng, place ){
         }
 
         if( results[0] ){
-            places[place].placeId = results[0].place_id
             places[place].element.value = results[0].formatted_address
             addClass( places[place].element.parentElement, 'brk-form-wrap-active' )
-        }
-
-        // Get directions if other marker is already set
-        if( places[otherPlace].placeId ){
-            getDirections()
         }
     })
 }
@@ -166,8 +199,7 @@ function addClass( el, className ){
 
     if ( el.classList && el.classList.add ){
         el.classList.add(className);
-    }
-    else if( el.className ){
+    }else if( el.className ){
         el.className += ' ' + className;
     }
 };
