@@ -7,6 +7,14 @@
 <head>
 	<title>Maps Taxi</title>
 	<link rel="stylesheet" type="text/css" href="style.css">
+	
+		<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/assets/bootstrap.css">
+		<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/skins/brk-blue.css">
+		<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/skins/brk-base-color.css">
+		<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/assets/styles.min.css">
+		<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/components/breadcrumbs.css">
+	    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+	
 </head>
 <body>
 	<style>
@@ -52,6 +60,9 @@
             background: #fff;
             width: 100%;
         }
+        body .brk-form-strict [type=text]+.input-label{
+            color:rgba(var(--brk-dark-base-rgb),.6);
+        }
     </style>
 	
     
@@ -92,7 +103,7 @@
     </div>
     
     	
-<script type="text/javascript" src="jlb2.js?v=3">
+<script type="text/javascript">
 var directionsService, geocoder, distanceMatrixService
 var places = {
     pickUp : {
