@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Maps Taxi</title>
+	<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/assets/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/skins/brk-blue.css">
+	<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/skins/brk-base-color.css">
+	<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/assets/styles.min.css">
+	<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/components/breadcrumbs.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+</head>
+<body>
+	<style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 80%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+/*show and hide of form*/
+      .form_collapsed{
+        padding-top: 72px;
+        height: 300px !important;
+        overflow: hidden;
+      }
+
+      .form_open{
+        width: auto !important;
+        overflow: visible !important;
+      }
+      .jq-selectbox__dropdown{
+        bottom: auto !important;
+      }
+      .location-icon{
+        position: absolute;
+        z-index: 4;
+        top: 50%;
+        right: 12px;
+        cursor: pointer;
+        /* color:#2775ff; */
+        color: rgba(var(--brk-dark-base-rgb),.4);
+        -webkit-transform: translateY(0) scale(1);
+        -ms-transform: translateY(0) scale(1);
+        transform: translateY(0) scale(1);
+        -webkit-transition: all 0.8s;
+        -ms-transition: all 0.8s;
+        transition: all 0.8s;
+      }
+      .brk-form-wrap-active .location-icon{
+        -webkit-transform: translateY(-115%) scale(0.7);
+            -ms-transform: translateY(-115%) scale(0.7);
+                transform: translateY(-115%) scale(0.7);
+      }
+
+        input:disabled{
+            background: #fff;
+            width: 100%;
+        }
+    </style>
+	
+    <div class="container">
+    	<div class="breadcrumbs__section brk-bg-center-cover brk-library-rendered"  data-brk-library="component__breadcrumbs_css"><span class="brk-abs-bg-overlay brk-bg-grad opacity-60" style="background: #fff;"></span>
+            <div class="breadcrumbs__wrapper" style="padding-top: 0px; background: #FFF;">
+                <div id="form_test" class="container-fluid brk-form brk-form-strict map_form_steps form_open">
+                    <form class="brk-form-strict form_step" data-step="1">
+                        <div class="align-items-center">
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="brk-form-wrap brk-form-wrap-active">
+                                        <input type="text" class="brk-form-input-transparent quote_form_map rendered" name="pick_up" id="pick_up" data-module_id="" placeholder="" autocomplete="off">
+                                        <label class="input-label" for="pick_up">Pick up Location</label>
+                                        <span class="icon-before location-icon" data-location="pickUp" title="Use my current location"><i class="fa fa-map-marker-alt" aria-hidden="true"></i></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="brk-form-wrap">
+                                        <input type="text" class="brk-form-input-transparent quote_form_map rendered" name="drop_off" id="drop_off" data-module_id="" placeholder="" autocomplete="off">
+                                        <label class="input-label" for="drop_off">Drop off Location</label>
+                                        <span class="icon-before location-icon" data-location="dropOff" title="Use my current location"><i class="fa fa-map-marker-alt" aria-hidden="true"></i></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="brk-form-wrap">
+                                        <input class="total-distance brk-form-input-transparent quote_form_map rendered" id="distance-input" type="text" placeholder="" disabled>
+                                        <label class="input-label" for="drop_off">Distance Travelled</label>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="brk-form-wrap">
+                                        <input class="total-cost brk-form-input-transparent quote_form_map rendered" id="cost-input" type="text" placeholder="" disabled>
+                                        <label class="input-label" for="drop_off">Cost ( $2.5 per mile )</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+    		</div>
+    	</div>
+    </div>
+    	
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBGraz0piF8xyoi2zAdb8xKTooF_8wqunc&callback=initMap&libraries=places"
+    async defer></script>
+
+</body>
+</html>

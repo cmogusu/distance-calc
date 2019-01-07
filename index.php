@@ -7,14 +7,6 @@
 <head>
 	<title>Maps Taxi</title>
 	<link rel="stylesheet" type="text/css" href="style.css">
-	
-		<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/assets/bootstrap.css">
-		<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/skins/brk-blue.css">
-		<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/skins/brk-base-color.css">
-		<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/assets/styles.min.css">
-		<link rel="stylesheet" type="text/css" href="https://jlblogistics.com/account/css/components/breadcrumbs.css">
-	    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
-	
 </head>
 <body>
 	<style>
