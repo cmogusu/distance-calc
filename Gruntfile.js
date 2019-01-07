@@ -14,10 +14,10 @@ module.exports = function(grunt) {
     },
     uncss: {
       dist: {
-        files: {
-          './css/style.css': ['http://localhost/gmaps/taxi/index.html']
-        }
-      }
+        files: [
+          { src: 'index.html', dest: 'style.css' }
+        ]
+      },
     }
   });
 
